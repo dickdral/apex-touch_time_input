@@ -5,6 +5,10 @@
  * Modifications:
  *  15-02-2015 Clock always starts with invisible hands
  *             Clock numbers can be used to chose also on touch device
+ *  11-01-2017 Made ready for Apex plug-in
+ *             - namespace built in
+ *             - arguments time and mode are removed. Only window_base remains
+ *             
  * 
  */
 
@@ -24,19 +28,26 @@ var apextic = {
  starty : 0,
  dist : 0,
  hourTextLeft : 0,
+ window_base: 7,
+ logging: 0,
 
  // clock state
  activeHandName : 'hour',
  currentHour    : null,
  currentMinutes : null,
  sensitivity    : 20,
- mode           : 'AM',
+ mode           : 'base',
  touchStartInClock : false,
  
 
 /********************************************************************
  * Utility functions
  */
+
+debug: function (text) 
+{
+  if ( this.logging == 1 ) { console.log(text); }
+},
 
 // prefix one character number with zero
 lpad : function (number) 
@@ -69,11 +80,15 @@ getAngleFromVector : function ( px, py )
 setMode : function (theMode) 
 { this.mode = theMode;
   if ( this.mode == 'AM' )
-  { $('#buttonPM text').attr('fill','black');
-    $('#buttonAM text').attr('fill','gray');
+  { 
+    this.window_base = 0;
+    $('#buttonPM text').attr('fill','black');
+    $('#buttonAM text').attr('fill','lightgray');
   }
   else
-  { $('#buttonPM text').attr('fill','gray');
+  { 
+    this.window_base = 12;
+    $('#buttonPM text').attr('fill','lightgray');
     $('#buttonAM text').attr('fill','black');
   }
 },
@@ -167,7 +182,7 @@ withinClock : function (px,py)
   dy = py - y[0];
   if ( Math.sqrt(dx*dx + dy*dy) <= this.handLength[this.minuteHand] )
   { retval = true; }
-  console.log(retval);
+  this.debug('Position within clock:'+retval);
   return retval;
 },
 
@@ -323,7 +338,7 @@ createButton : function  ( group, name, text, x, y, width, height )
                    .attr("values","white; gray ; white")
                    .attr("fill","freeze").appendTo( $('#'+name+'Box') );
 
-  buttonText = this.svgCreateTextElement(name+"Text",text,x,y+height-8)
+  buttonText = this.svgCreateTextElement(name+"Text",text,x,y+height-14)
 
   $(buttonText).appendTo( $(button) );
   
@@ -389,18 +404,18 @@ createDigitalTime : function ( group, hours, minutes)
   y  = y + height - 5;
 
   xText = x + width/2;
-  text = this.svgCreateTextElement('digitalTimeColon',':',xText,y-3);
+  text = this.svgCreateTextElement('digitalTimeColon',':',xText,y-5);
   $(text).appendTo( $(lGroup) );
 
   hours = this.lpad(hours);
   xText = x + width/2 - 5;
-  text = this.svgCreateTextElement('digitalTimeHours',hours,xText,y);  
+  text = this.svgCreateTextElement('digitalTimeHours',hours,xText,y-5);  
   $(text).appendTo( $(lGroup) );
   hourTextLeft = this.leftAlignTextElement('digitalTimeHours',xText);
   
   minutes = this.lpad(minutes);
   xText = x + width/2 + 12;
-  text = this.svgCreateTextElement('digitalTimeMinutes',minutes,xText,y);
+  text = this.svgCreateTextElement('digitalTimeMinutes',minutes,xText,y-5);
   $(text).appendTo( $(lGroup) );
   
   return(lGroup);
@@ -411,7 +426,7 @@ setCurrentDigitalTime : function ()
 },
 
 toAM : function ()
-{ if ( currentHour >= 12 ) 
+{ if ( this.currentHour >= 12 ) 
   { this.currentHour = this.currentHour - 12; 
     this.setCurrentDigitalTime();
   }
@@ -452,7 +467,7 @@ ticAddTouchEvents : function  ( id )
     var touchobj = e.changedTouches[0];  // reference first touch point (ie: first finger)
     startx = parseInt(touchobj.clientX); // get x position of touch point relative to left edge of browser
     starty = parseInt(touchobj.clientY); // get y position of touch point relative to top edge of browser
-    console.log('touchStart:'+startx+";"+starty);
+    apextic.debug('touchStart:'+startx+";"+starty);
     
     apextic.touchStartInClock = false;
     if ( apextic.withinClock(startx,starty) )
@@ -473,7 +488,7 @@ ticAddTouchEvents : function  ( id )
     var touchobj = e.changedTouches[0] // reference first touch point for this event
     var dirx = parseInt(touchobj.clientX)-startx;    
     var diry = parseInt(touchobj.clientY)-starty;
-    console.log(dirx+";"+diry);
+    apextic.debug(dirx+";"+diry);
     apextic.setHand(dirx,diry);
     // prevent from reacting on click by requiring minimum distance
 
@@ -481,7 +496,8 @@ ticAddTouchEvents : function  ( id )
     { var time = apextic.getTime(dirx,-diry);
       if ( apextic.activeHandName == 'hour' )
       { apextic.currentHour = time; 
-        if ( apextic.setMode('PM') ) { apextic.currentHour = apextic.currentHour + 12; }
+        // adapt hour to time window
+        if ( apextic.currentHour < apextic.window_base ) { apextic.currentHour = apextic.currentHour + 12; }
       }
       else
       { apextic.currentMinutes = time * 5; }
@@ -529,49 +545,6 @@ ticReturnTime : function ()
 /* ------------------------------------
  * display the TIC control
  */
-ticShow : function ( item, time, mode )
-{ 
-  // store calling item
-  this.clockItem = item;
-  
-  // show shaded background
-  $(this.ticPageBackground()).show();
-
-  // if control exists then show it else build it
-  if ( this.ticExists() )
-  { this.showControl(item); }
-  else
-  { this.buildControl(item); }
-  
-  // if time is given then display time
-/*  if (time) 
-  { setCurrentTimeFromString(time); 
-    ticSetTime();
-  }
-*/
-  // make hands invisible
-  this.hideHands();
-  
-  // initialize time
-  this.currentHour = null;
-  this.currentMinutes = null;
-  this.updateDigitalTime(this.currentHour,this.currentMinutes);
-  
-  // set mode:
-  // 1 default PM
-  // 2 from the argument mode
-  // 3 derived from time
-  if ( mode == 'AM' || mode == 'PM' )
-  { this.setMode(mode); }
-  else
-  { this.setMode('PM'); }
-  
-  if ( time < 12 )
-  { this.setMode('PM'); }
-  
-  // set hourhand as active
-  this.setActiveHand('hour');
-},
 
 buildControl : function ( item )
 { 
@@ -609,7 +582,7 @@ buildControl : function ( item )
   $(buttonPM).click( function() { apextic.toPM(); } );
   
   buttonCancel = this.createButton ( ticTime, 'buttonCancel', 'Cancel',  10, 340, 149, 35 );
-  $(buttonCancel).click ( function() { ticCancel();} );
+  $(buttonCancel).click ( function() { apextic.ticCancel();} );
 
   buttonOK = this.createButton ( ticTime, 'buttonOK', 'OK', 178, 340, 149, 35 );
   $(buttonOK).click ( function() { apextic.ticReturnTime();} );
@@ -706,6 +679,35 @@ buildControl : function ( item )
   }
 
 },
+ticShow : function ( item, window_base )
+{ 
+  // store calling item
+  this.clockItem = item;
+  
+  // store window base
+  this.window_base = window_base;
+      
+  // show shaded background
+  $(this.ticPageBackground()).show();
+
+  // if control exists then show it else build it
+  if ( this.ticExists() )
+  { this.showControl(item); }
+  else
+  { this.buildControl(item); }
+  
+  // make hands invisible
+  this.hideHands();
+  
+  // initialize time
+  this.currentHour = null;
+  this.currentMinutes = null;
+  this.updateDigitalTime(this.currentHour,this.currentMinutes);
+    
+  // set hourhand as active
+  this.setActiveHand('hour');
+},
+
 /* Apex plugin function */
 doIt : function() 
 {
@@ -716,17 +718,13 @@ doIt : function()
     var itemId = '#'+$(vElementsArray).attr('id');
 
     var window_base = ( daThis.action.attribute01 ) ? daThis.action.attribute01 : 7;
-    var mode        = ( daThis.action.attribute02 ) ? daThis.action.attribute02 : 'AM';
+    apextic.logging    = ( daThis.action.attribute02 ) ? daThis.action.attribute02 : 0;
     // Logging
-    var vLogging = true;
-    if (vLogging) 
-    {
-        console.log('TIC: item ID=', itemId);
-        console.log('TIC: window_base=', window_base);
-        console.log('TIC: mode=', mode);
-    }
+    apextic.debug('Function: Apex Touch Time Control');
+    apextic.debug('Parameters: item ID     ='+itemId);
+    apextic.debug('            window_base ='+window_base);
 
-    apextic.ticShow( itemId, time, mode );
+    apextic.ticShow( itemId, window_base );
 }
 
 }
