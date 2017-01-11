@@ -1,0 +1,35 @@
+{
+  "name" : "Resize Dialog",
+  "version" : "v1.0",
+  "description" : "Resize Dialog resizes an Apex modal dialog to fit its contents",
+  "keywords" : ["dialog","resize","dynamic action"],
+  "homepage" : "https://github.com/dickdral/apex-resize_dialog",
+  "bugs" : {
+    "url" : "https://github.com/dickdral/apex-resize_dialog/issues",
+    "email" : "dick.dral@detora.nl"
+  },
+  "license" : "MIT",
+  "author" : {
+    "name" : "Dick Dral",
+    "email" : "dick.dral@detora.nl",
+    "url" : "http://www.detora.nl",
+    "twitter" : "dickdral",
+    "donationUrl" : "https://www.paypal.me/dickdral/3"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/dickdral/apex-resize_dialog.git"
+  },
+  "oracle" : {
+    "versions" : ["11.2.0.1", "12.1.0.1"],
+    "apex" : {
+      "versions" : ["5.0.0","5.1.0"],
+      "plugin" : {
+        "internalName" : "NL.DETORA.APEX.RESIZE_DIALOG",
+        "type" : "dynamic action",
+        "demo" : "http://www.speech2form.com/ords/f?p=OPFG:RESIZE_DIALOG",
+        "previewImage" : "https://raw.githubusercontent.com/dickdral/apex-resize_dialog/master/resize_dialog_example.gif"
+      }
+    }
+  }
+}
