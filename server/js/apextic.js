@@ -538,7 +538,7 @@ ticReturnTime : function ()
     
   // return chosen time to clock item
   if (this.clockItem) 
-  { var currentTime = '';
+  { this.currentTime = null;
     if ( this.currentHour > -1 && this.currentMinutes > -1 ) 
       { 
         var am_pm = (this.currentHour > 12 ) ? 'PM' : 'AM';
