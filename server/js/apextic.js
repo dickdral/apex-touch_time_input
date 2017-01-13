@@ -8,6 +8,7 @@
  *  11-01-2017 Made ready for Apex plug-in
  *             - namespace built in
  *             - arguments time and mode are removed. Only window_base remains
+ *  13-01-2017 - argument time_format added
  *             
  * 
  */
@@ -29,6 +30,7 @@ var apextic = {
  dist : 0,
  hourTextLeft : 0,
  window_base: 7,
+ time_format: 'hh24:mi',
  logging: 0,
 
  // clock state
@@ -182,7 +184,6 @@ withinClock : function (px,py)
   dy = py - y[0];
   if ( Math.sqrt(dx*dx + dy*dy) <= this.handLength[this.minuteHand] )
   { retval = true; }
-  this.debug('Position within clock:'+retval);
   return retval;
 },
 
@@ -255,7 +256,9 @@ showControl : function ()
 },
 
 returnTime : function ()
-{ this.hideControl();
+{ 
+  debug('returnTime');  
+  this.hideControl();
   if (this.clockItem && this.currentHour && this.currentMinutes ) 
   { var time = this.lpad(this.currentHour) + ':' + this.lpad(this.currentMinutes);
     $(clockItem).val(time);
@@ -467,7 +470,7 @@ ticAddTouchEvents : function  ( id )
     var touchobj = e.changedTouches[0];  // reference first touch point (ie: first finger)
     startx = parseInt(touchobj.clientX); // get x position of touch point relative to left edge of browser
     starty = parseInt(touchobj.clientY); // get y position of touch point relative to top edge of browser
-    apextic.debug('touchStart:'+startx+";"+starty);
+    apextic.debug('touchStart: starting position = '+startx+";"+starty);
     
     apextic.touchStartInClock = false;
     if ( apextic.withinClock(startx,starty) )
@@ -488,7 +491,7 @@ ticAddTouchEvents : function  ( id )
     var touchobj = e.changedTouches[0] // reference first touch point for this event
     var dirx = parseInt(touchobj.clientX)-startx;    
     var diry = parseInt(touchobj.clientY)-starty;
-    apextic.debug(dirx+";"+diry);
+    apextic.debug('touchEnd: directions = '+dirx+";"+diry);
     apextic.setHand(dirx,diry);
     // prevent from reacting on click by requiring minimum distance
 
@@ -530,13 +533,39 @@ ticCancel : function ()
 
 ticReturnTime : function ()
 { 
+  this.debug('ticReturnTime');
   this.hideControl();
     
   // return chosen time to clock item
   if (this.clockItem) 
-  { this.currentTime = '';
+  { var currentTime = '';
     if ( this.currentHour > -1 && this.currentMinutes > -1 ) 
-      { this.currentTime = this.lpad(this.currentHour) + ':' + this.lpad(this.currentMinutes);
+      { 
+        var am_pm = (this.currentHour > 12 ) ? 'PM' : 'AM';
+        var hour  = (this.currentHour > 12 ) ? this.currentHour - 12 : this.currentHour;
+
+        if ( this.time_format == 'hh:mi am' )
+        { 
+           this.currentTime = this.lpad(hour) + ':' + this.lpad(this.currentMinutes) + ' ' + am_pm;
+        }
+
+        if ( this.time_format == 'hh24.mi' )
+        { 
+           this.currentTime = this.lpad(this.currentHour) + '.' + this.lpad(this.currentMinutes);
+        }
+
+        if ( this.time_format == 'hh.mi am' )
+        { 
+           this.currentTime = this.lpad(hour) + '.' + this.lpad(this.currentMinutes) + ' ' + am_pm;
+        }
+
+        // else default
+        if ( this.currentTime == null )
+        { 
+          this.currentTime = this.lpad(this.currentHour) + ':' + this.lpad(this.currentMinutes); 
+        }
+        this.debug(this.currentTime);
+        
         $(this.clockItem).val(this.currentTime);
       }  
   }
@@ -559,8 +588,9 @@ buildControl : function ( item )
   
 
   var svgWidth = Math.min( $(window).width(), 500);
+  var svgHeight = Math.round( svgWidth * 650 /500 );
   
-  svg = this.svgCreateRootElem("ticClock",svgWidth,"500","0 0 350 350");
+  svg = this.svgCreateRootElem("ticClock",svgWidth,"650","0 0 350 350");
   $(svg).appendTo( $('#ticBox') );
 
   var ticTime = document.createElementNS("http://www.w3.org/2000/svg", 'g');
@@ -658,34 +688,36 @@ buildControl : function ( item )
   /* if ( !isTouchDevice() ) */
   { $("[id^=txt]").click ( function (event) {
        var time = $(this).attr('id').substring(3);
-       if ( this.getActiveHand() == 'hour' )
-       { this.currentHour = parseInt(time);
-         if ( this.currentHour == 12 ) { this.currentHour = 0; }
-         if ( this.currentMinutes < 0 ) 
-           { this.currentMinutes = 0; }
-         if ( this.mode == 'PM' ) 
-           { this.currentHour = this.currentHour + 12; }
-         this.setHourHand();
-         this.setActiveHand('minute');
+       if ( apextic.getActiveHand() == 'hour' )
+       { 
+         apextic.currentHour = parseInt(time);
+         if ( apextic.currentHour == 12 ) { apextic.currentHour = 0; }
+         if ( apextic.currentHour < apextic.window_base ) { apextic.currentHour = apextic.currentHour + 12; }
+
+         if ( apextic.currentMinutes < 0 ) 
+           { apextic.currentMinutes = 0; }
+         if ( apextic.mode == 'PM' ) 
+           { apextic.currentHour = apextic.currentHour + 12; }
+         apextic.setHourHand();
+         apextic.setActiveHand('minute');
        }
        else
-       { this.currentMinutes = parseInt(time)*5;
-         if ( this.currentMinutes == 60 ) { this.currentMinutes = 0; } 
-         this.setMinuteHand();
-         this.setActiveHand('hour');
+       { apextic.currentMinutes = parseInt(time)*5;
+         if ( apextic.currentMinutes == 60 ) { apextic.currentMinutes = 0; } 
+         apextic.setMinuteHand();
+         apextic.setActiveHand('hour');
        }
-       this.setCurrentDigitalTime();
+       apextic.setCurrentDigitalTime();
     } );
   }
 
 },
-ticShow : function ( item, window_base )
+ticShow : function ( item, window_base, time_format )
 { 
-  // store calling item
+  // store parameters
   this.clockItem = item;
-  
-  // store window base
   this.window_base = window_base;
+  this.time_format = time_format;
       
   // show shaded background
   $(this.ticPageBackground()).show();
@@ -718,13 +750,15 @@ doIt : function()
     var itemId = '#'+$(vElementsArray).attr('id');
 
     var window_base = ( daThis.action.attribute01 ) ? daThis.action.attribute01 : 7;
-    apextic.logging    = ( daThis.action.attribute02 ) ? daThis.action.attribute02 : 0;
+    var time_format = ( daThis.action.attribute02 ) ? daThis.action.attribute02 : 'hh24:mi';
+    apextic.logging    = ( daThis.action.attribute10 ) ? daThis.action.attribute10 : 0;
     // Logging
     apextic.debug('Function: Apex Touch Time Control');
     apextic.debug('Parameters: item ID     ='+itemId);
     apextic.debug('            window_base ='+window_base);
+    apextic.debug('            time_format ='+time_format);
 
-    apextic.ticShow( itemId, window_base );
+    apextic.ticShow( itemId, window_base, time_format );
 }
 
 }

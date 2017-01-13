@@ -1,11 +1,11 @@
 {
-  "name" : "Resize Dialog",
+  "name" : "Touch Time Input",
   "version" : "v1.0",
-  "description" : "Resize Dialog resizes an Apex modal dialog to fit its contents",
-  "keywords" : ["dialog","resize","dynamic action"],
-  "homepage" : "https://github.com/dickdral/apex-resize_dialog",
+  "description" : "Time input for touch devices",
+  "keywords" : ["time input","touch","smartphone","dynamic action"],
+  "homepage" : "https://github.com/dickdral/apex-touch_time_input",
   "bugs" : {
-    "url" : "https://github.com/dickdral/apex-resize_dialog/issues",
+    "url" : "https://github.com/dickdral/apex-touch_time_input/issues",
     "email" : "dick.dral@detora.nl"
   },
   "license" : "MIT",
@@ -18,17 +18,17 @@
   },
   "repository" : {
     "type" : "git",
-    "url" : "https://github.com/dickdral/apex-resize_dialog.git"
+    "url" : "https://github.com/dickdral/apex-touch_time_input.git"
   },
   "oracle" : {
     "versions" : ["11.2.0.1", "12.1.0.1"],
     "apex" : {
       "versions" : ["5.0.0","5.1.0"],
       "plugin" : {
-        "internalName" : "NL.DETORA.APEX.RESIZE_DIALOG",
+        "internalName" : "NL.DETORA.APEX.TOUCH_TIME_INPUT",
         "type" : "dynamic action",
-        "demo" : "http://www.speech2form.com/ords/f?p=OPFG:RESIZE_DIALOG",
-        "previewImage" : "https://raw.githubusercontent.com/dickdral/apex-resize_dialog/master/resize_dialog_example.gif"
+        "demo" : "http://www.speech2form.com/ords/f?p=OPFG:TIME_INPUT_DEMO",
+        "previewImage" : "https://raw.githubusercontent.com/dickdral/apex-touch_time_input/master/apex-touch_time_input_example.gif"
       }
     }
   }

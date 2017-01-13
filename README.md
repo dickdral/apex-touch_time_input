@@ -10,17 +10,18 @@ In the attributes a margin and whether the dialog should be centered can be spec
 The plugin can be used with Apex 5.0 and Apex 5.1 in applications using Universal Theme. 
 
 ## Install
-- Import plugin file "dynamic_action_plugin_nl_detora_apex_resize_dialog.sql" from source directory into your application
-- You can use the plug-in for any event after which you want the modal size to be adjusted
-- Use the settings to center the dialog or set the margin
+- Import plugin file "dynamic_action_plugin_nl_detora_apex_touch_time_input.sql" from source directory into your application
+- At installation you will be prompted for the default time format. This can be changed after the installation at any time. 
+- You can use the plug-in in a click event on a button, for example a time picker button
+- In the plug-in point to the item where the time should be placed in and the base of the time window
 
 ## Plugin Settings
 The plugin settings are customizable and you can change:
-- **Center Dialog?** - Whether or not the dialog is centered vertically
-- **Margin** - The minimal margin around the dialog
+- **Time format** - Time format for return value
+- **Window base** - base value of the time window ( default 7, so time window is 7:00 to 18:55 )
 ## Demo Application
-http://www.speech2form.com/ords/f?p=OPFG:RESIZE_DIALOG
+http://www.speech2form.com/ords/f?p=OPFG:TIME_INPUT_DEMO
 
 ## Preview
-![](https://raw.githubusercontent.com/dickdral/apex-resize_dialog/master/resize_dialog_example.gif?raw=true)
+![](https://raw.githubusercontent.com/dickdral/apex-touch_time_input/master/apex-touch_time_input_example.gif?raw=true)
 ---
